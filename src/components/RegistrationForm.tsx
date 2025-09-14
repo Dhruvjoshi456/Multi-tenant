@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface RegistrationFormProps {
     onSuccess?: () => void;
@@ -115,8 +114,8 @@ export default function RegistrationForm({ onSuccess, onSwitchToLogin }: Registr
                 onSuccess();
             }
 
-        } catch (error: any) {
-            setError(error.message);
+        } catch (error: unknown) {
+            setError(error instanceof Error ? error.message : 'An error occurred');
         } finally {
             setLoading(false);
         }

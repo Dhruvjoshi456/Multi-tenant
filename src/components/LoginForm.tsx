@@ -169,7 +169,7 @@ export default function LoginForm({ onSwitchToRegister, onShowTenantCreation }: 
                                 onClick={onSwitchToRegister}
                                 className="text-slate-300 hover:text-white text-sm font-medium transition-colors duration-200 hover:underline"
                             >
-                                Don't have an account?
+                                Don&apos;t have an account?
                                 <span className="text-indigo-400 hover:text-indigo-300 ml-1 font-semibold">
                                     Create one
                                 </span>

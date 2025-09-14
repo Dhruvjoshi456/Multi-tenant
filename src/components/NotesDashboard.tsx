@@ -325,7 +325,7 @@ export default function NotesDashboard() {
         }
     };
 
-    const createTenant = async (tenantData: any) => {
+    const createTenant = async (tenantData: { name: string; slug: string; companyName: string }) => {
         try {
             const response = await fetch('/api/tenants', {
                 method: 'POST',

@@ -12,7 +12,7 @@ export class DatabaseAdapter {
   }
 
   // Execute a query and return results
-  async query(sql: string, params: any[] = []): Promise<any[]> {
+  async query(sql: string, params: unknown[] = []): Promise<unknown[]> {
     if (this.isPostgres) {
       const result = await (this.db as Pool).query(sql, params);
       return result.rows;
@@ -23,7 +23,7 @@ export class DatabaseAdapter {
   }
 
   // Get a single row
-  async get(sql: string, params: any[] = []): Promise<any> {
+  async get(sql: string, params: unknown[] = []): Promise<unknown> {
     if (this.isPostgres) {
       const result = await (this.db as Pool).query(sql, params);
       return result.rows[0] || null;
@@ -34,7 +34,7 @@ export class DatabaseAdapter {
   }
 
   // Execute a query without returning results (INSERT, UPDATE, DELETE)
-  async run(sql: string, params: any[] = []): Promise<{ lastInsertRowid?: number; changes: number }> {
+  async run(sql: string, params: unknown[] = []): Promise<{ lastInsertRowid?: number; changes: number }> {
     if (this.isPostgres) {
       const result = await (this.db as Pool).query(sql, params);
       return {
@@ -56,9 +56,9 @@ export class DatabaseAdapter {
     if (this.isPostgres) {
       // For PostgreSQL, we'll return a mock object that works with our adapter
       return {
-        get: (params: any[]) => this.get(sql, params),
-        all: (params: any[]) => this.query(sql, params),
-        run: (params: any[]) => this.run(sql, params)
+        get: (params: unknown[]) => this.get(sql, params),
+        all: (params: unknown[]) => this.query(sql, params),
+        run: (params: unknown[]) => this.run(sql, params)
       };
     } else {
       return (this.db as Database.Database).prepare(sql);
@@ -77,7 +77,7 @@ export class DatabaseAdapter {
 
 // Helper function to get database adapter
 export function getDatabaseAdapter() {
-  const { getDatabase } = require('./database');
+  const { getDatabase } = await import('./database');
   const db = getDatabase();
   return new DatabaseAdapter(db);
 }

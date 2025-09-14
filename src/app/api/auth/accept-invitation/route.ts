@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
         // Verify invitation token
         let payload;
         try {
-            payload = jwt.verify(token, JWT_SECRET) as any;
+            payload = jwt.verify(token, JWT_SECRET) as { type: string; email: string; tenantId: number; role: string; firstName: string; lastName: string };
         } catch (error) {
             return NextResponse.json(
                 { error: 'Invalid or expired invitation token' },

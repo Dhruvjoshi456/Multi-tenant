@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
             const { search, category, tags, archived } = request.nextUrl.searchParams;
 
             let whereClause = 'WHERE n.tenant_id = ?';
-            let params = [authenticatedRequest.user.tenant_id];
+            const params = [authenticatedRequest.user.tenant_id];
 
             // Add search filter
             if (search) {

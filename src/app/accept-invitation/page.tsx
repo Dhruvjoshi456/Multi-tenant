@@ -7,7 +7,7 @@ export default function AcceptInvitationPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    const [invitationData, setInvitationData] = useState<any>(null);
+    const [invitationData, setInvitationData] = useState<{ email: string; tenantName: string; invitedBy: string } | null>(null);
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [submitting, setSubmitting] = useState(false);

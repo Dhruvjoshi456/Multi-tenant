@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
         // Verify JWT token
         let decoded;
         try {
-            decoded = jwt.verify(token, JWT_SECRET) as any;
+            decoded = jwt.verify(token, JWT_SECRET) as { type: string; email: string; tenantId: number; role: string; firstName: string; lastName: string };
         } catch (error) {
             const response = NextResponse.json(
                 { error: 'Invalid or expired invitation token' },

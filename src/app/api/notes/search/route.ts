@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
             const db = getDatabase();
 
             let whereClause = 'WHERE n.tenant_id = ? AND (n.title LIKE ? OR n.content LIKE ?)';
-            let params = [
+            const params = [
                 authenticatedRequest.user.tenant_id,
                 `%${query}%`,
                 `%${query}%`
