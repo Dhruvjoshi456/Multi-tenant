@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/database';
 import { sendWelcomeEmail } from '@/lib/email';
-import { enableCORS, handleCORSForOptions } from '@/lib/middleware';
+import { enableCORS, handleCORS, handleCORSForOptions } from '@/lib/middleware';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 

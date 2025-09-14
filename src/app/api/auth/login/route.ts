@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateUser, generateToken } from '@/lib/auth';
-import { enableCORS, handleCORSForOptions } from '@/lib/middleware';
+import { enableCORS, handleCORS, handleCORSForOptions } from '@/lib/middleware';
 import { checkRateLimit, recordLoginAttempt, getClientIP } from '@/lib/rateLimiter';
 
 export async function POST(request: NextRequest) {

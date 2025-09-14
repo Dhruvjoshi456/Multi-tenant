@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { enableCORS, handleCORSForOptions } from '@/lib/middleware';
+import { enableCORS, handleCORS, handleCORSForOptions } from '@/lib/middleware';
 
 export async function GET(request: NextRequest) {
     // Handle CORS preflight

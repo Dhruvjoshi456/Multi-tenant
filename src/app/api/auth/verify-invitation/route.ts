@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/database';
 import jwt from 'jsonwebtoken';
-import { enableCORS, handleCORSForOptions } from '@/lib/middleware';
+import { enableCORS, handleCORS, handleCORSForOptions } from '@/lib/middleware';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
