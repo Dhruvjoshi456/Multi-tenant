@@ -76,7 +76,7 @@ export class DatabaseAdapter {
 }
 
 // Helper function to get database adapter
-export function getDatabaseAdapter() {
+export async function getDatabaseAdapter() {
   const { getDatabase } = await import('./database');
   const db = getDatabase();
   return new DatabaseAdapter(db);

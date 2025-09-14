@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
 import { Pool } from 'pg';
+import { DatabaseAdapter } from './db-adapter';
 
 let db: Database.Database | null = null;
 let pgPool: Pool | null = null;
@@ -36,3 +37,9 @@ function getPostgresDatabase() {
 
 // Export both database types for type safety
 export type DatabaseType = Database.Database | Pool;
+
+// Export database adapter for consistent usage
+export function getDatabaseAdapter() {
+  const db = getDatabase();
+  return new DatabaseAdapter(db);
+}

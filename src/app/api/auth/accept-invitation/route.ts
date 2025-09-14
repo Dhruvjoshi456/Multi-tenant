@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase } from '@/lib/database';
+import { getDatabaseAdapter } from '@/lib/database';
 import { sendWelcomeEmail } from '@/lib/email';
 import { enableCORS, handleCORS, handleCORSForOptions } from '@/lib/middleware';
 import bcrypt from 'bcryptjs';
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
         // Verify invitation token
         let payload;
         try {
-            payload = jwt.verify(token, JWT_SECRET) as { type: string; email: string; tenantId: number; role: string; firstName: string; lastName: string };
+            payload = jwt.verify(token, JWT_SECRET) as { type: string; email: string; tenantId: number; role: string; firstName: string; lastName: string; tenantSlug: string };
         } catch (error) {
             return NextResponse.json(
                 { error: 'Invalid or expired invitation token' },
@@ -48,14 +48,13 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const db = getDatabase();
+        const db = getDatabaseAdapter();
 
         // Check if invitation exists and is valid
-        const invitationStmt = db.prepare(`
+        const invitation = await db.get(`
             SELECT * FROM user_invitations 
-            WHERE token = ? AND accepted_at IS NULL AND expires_at > datetime('now')
-        `);
-        const invitation = invitationStmt.get(token);
+            WHERE token = ? AND accepted_at IS NULL AND expires_at > NOW()
+        `, [token]);
 
         if (!invitation) {
             return NextResponse.json(
@@ -65,8 +64,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Check if user already exists
-        const existingUserStmt = db.prepare('SELECT * FROM users WHERE email = ?');
-        const existingUser = existingUserStmt.get(payload.email);
+        const existingUser = await db.get('SELECT * FROM users WHERE email = ?', [payload.email]);
 
         if (existingUser) {
             return NextResponse.json(
@@ -79,12 +77,11 @@ export async function POST(request: NextRequest) {
         const hashedPassword = await bcrypt.hash(password, 12);
 
         // Create user
-        const insertUserStmt = db.prepare(`
+        const now = new Date().toISOString();
+        const userResult = await db.run(`
             INSERT INTO users (email, password, first_name, last_name, role, tenant_id, is_verified, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `);
-        const now = new Date().toISOString();
-        const userResult = insertUserStmt.run(
+        `, [
             payload.email,
             hashedPassword,
             payload.firstName,
@@ -94,16 +91,15 @@ export async function POST(request: NextRequest) {
             1, // Auto-verified via invitation
             now,
             now
-        );
+        ]);
         const userId = userResult.lastInsertRowid as number;
 
         // Mark invitation as accepted
-        const updateInvitationStmt = db.prepare(`
+        await db.run(`
             UPDATE user_invitations 
-            SET accepted_at = datetime('now'), accepted_by = ?
+            SET accepted_at = NOW(), accepted_by = ?
             WHERE token = ?
-        `);
-        updateInvitationStmt.run(userId, token);
+        `, [userId, token]);
 
         // Generate JWT token
         const authToken = jwt.sign(
@@ -119,14 +115,13 @@ export async function POST(request: NextRequest) {
         );
 
         // Get tenant info
-        const tenantStmt = db.prepare('SELECT * FROM tenants WHERE id = ?');
-        const tenant = tenantStmt.get(payload.tenantId);
+        const tenant = await db.get('SELECT * FROM tenants WHERE id = ?', [payload.tenantId]) as { id: number; name: string; slug: string; subscription_plan: string; theme_color?: string; logo?: string } | null;
 
         // Send welcome email
         const emailSent = await sendWelcomeEmail({
             to: payload.email,
             firstName: payload.firstName,
-            companyName: tenant.name
+            companyName: tenant?.name || 'Unknown Company'
         });
 
         const response = NextResponse.json({
@@ -142,14 +137,14 @@ export async function POST(request: NextRequest) {
                 role: payload.role,
                 isVerified: true
             },
-            tenant: {
+            tenant: tenant ? {
                 id: tenant.id,
                 name: tenant.name,
                 slug: tenant.slug,
                 subscription_plan: tenant.subscription_plan,
                 theme_color: tenant.theme_color,
                 logo: tenant.logo
-            },
+            } : null,
             emailSent
         }, { status: 201 });
 
