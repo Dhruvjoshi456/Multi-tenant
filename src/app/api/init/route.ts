@@ -27,6 +27,6 @@ export async function POST(request: NextRequest) {
 }
 
 export async function OPTIONS(request: NextRequest) {
-    return handleCORS(request);
+    return handleCORS(request) || new NextResponse(null, { status: 200 });
 }
 
