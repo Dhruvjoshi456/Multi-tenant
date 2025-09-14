@@ -1,11 +1,6 @@
 {
-    "functions": {
-        "src/app/api/**/*.ts": {
-            "maxDuration": 30
-        }
-    },
-    "env": {
-        "JWT_SECRET": "@jwt_secret"
-    }
+  "buildCommand": "npm run build && npm run migrate:postgres",
+  "env": {
+    "NODE_ENV": "production"
+  }
 }
-

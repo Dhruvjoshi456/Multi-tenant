@@ -6,17 +6,20 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "migrate:postgres": "tsx src/lib/migrate-postgres.ts"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/nodemailer": "^7.0.1",
+    "@types/pg": "^8.15.5",
     "bcryptjs": "^3.0.2",
     "better-sqlite3": "^12.2.0",
     "jsonwebtoken": "^9.0.2",
     "next": "15.5.3",
     "nodemailer": "^7.0.6",
+    "pg": "^8.16.3",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "sqlite3": "^5.1.7"
@@ -31,6 +34,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
     "tailwindcss": "^4",
+    "tsx": "^4.20.5",
     "typescript": "^5"
   }
 }
