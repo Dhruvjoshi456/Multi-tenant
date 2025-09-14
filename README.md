@@ -1,163 +1,228 @@
-# Multi-Tenant SaaS Notes Application
+# 🚀 Multi-Tenant Notes Application
 
-A multi-tenant SaaS notes application built with Next.js, featuring role-based access control, subscription management, and tenant isolation.
+A modern, full-stack note-taking application built with Next.js 15, TypeScript, and SQLite. Features multi-tenant architecture, role-based access control, and a beautiful glassmorphism UI.
 
-## Architecture
+![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.0-38B2AC?style=for-the-badge&logo=tailwind-css)
+![SQLite](https://img.shields.io/badge/SQLite-3.0-003B57?style=for-the-badge&logo=sqlite)
 
-### Multi-Tenancy Approach
-This application uses a **shared schema with tenant_id** approach for multi-tenancy:
+## ✨ Features
 
-- All tables include a `tenant_id` column to ensure data isolation
-- Database queries always filter by `tenant_id` to prevent cross-tenant data access
-- Tenant information is stored in a separate `tenants` table
-- Users are associated with tenants through the `tenant_id` foreign key
+### 🏢 Multi-Tenant Architecture
+- **Isolated Data**: Each organization has completely separate data
+- **Tenant Management**: Create and manage multiple company workspaces
+- **Scalable Design**: Built to handle thousands of tenants
 
-### Database Schema
-- **tenants**: Stores tenant information (name, slug, subscription_plan)
-- **users**: Stores user accounts with role-based access (admin/member)
-- **notes**: Stores notes with tenant isolation
+### 🔐 Security & Authentication
+- **JWT Authentication**: Secure token-based authentication
+- **Role-Based Access**: Admin and Member roles with different permissions
+- **Password Security**: bcrypt hashing with salt rounds
+- **Rate Limiting**: Protection against brute force attacks
+- **Input Validation**: Comprehensive validation and sanitization
 
-### Security Features
-- JWT-based authentication
-- Role-based access control (Admin/Member)
-- Tenant data isolation enforced at the database level
-- Subscription-based feature gating
+### 📝 Advanced Notes Management
+- **Rich Text Support**: Create and edit notes with formatting
+- **Tags & Categories**: Organize notes with custom tags and categories
+- **Search & Filter**: Full-text search with advanced filtering options
+- **Archive System**: Soft delete with restore functionality
+- **Real-time Updates**: Live time display and dynamic UI
 
-## Test Accounts
+### 👥 User Management
+- **User Invitations**: Admins can invite users via email
+- **Email Notifications**: Welcome emails and invitation links
+- **Profile Management**: User profiles with tenant information
 
-All test accounts use the password: `password`
+### 💳 Subscription Management
+- **Free Plan**: Limited to 3 notes per tenant
+- **Pro Plan**: Unlimited notes and advanced features
+- **Plan Management**: Admins can upgrade/downgrade plans
+- **Feature Restrictions**: Plan-based feature access
 
-| Email | Role | Tenant | Subscription |
-|-------|------|--------|--------------|
-| admin@acme.test | Admin | Acme | Free |
-| user@acme.test | Member | Acme | Free |
-| admin@globex.test | Admin | Globex | Free |
-| user@globex.test | Member | Globex | Free |
+### 🎨 Modern UI/UX
+- **Glassmorphism Design**: Modern, professional interface
+- **Responsive Layout**: Mobile-first, works on all devices
+- **Dark Theme**: Beautiful dark gradient backgrounds
+- **Smooth Animations**: Hover effects and transitions
+- **Accessibility**: Proper ARIA labels and keyboard navigation
 
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/login` - User login
-
-### Notes (CRUD)
-- `GET /api/notes` - List all notes for current tenant
-- `POST /api/notes` - Create a new note
-- `GET /api/notes/:id` - Get specific note
-- `PUT /api/notes/:id` - Update note
-- `DELETE /api/notes/:id` - Delete note
-
-### Tenant Management
-- `POST /api/tenants/:slug/upgrade` - Upgrade tenant to Pro (Admin only)
-
-### Health Check
-- `GET /api/health` - Health endpoint
-
-## Subscription Plans
-
-### Free Plan
-- Maximum 3 notes per tenant
-- All CRUD operations available
-- Admin can upgrade to Pro
-
-### Pro Plan
-- Unlimited notes
-- All features available
-
-## Features
-
-### Role-Based Access Control
-- **Admin**: Can invite users and upgrade subscriptions
-- **Member**: Can create, view, edit, and delete notes
-
-### Tenant Isolation
-- Strict data isolation between tenants
-- Users can only access data from their own tenant
-- All API endpoints enforce tenant boundaries
-
-### Subscription Gating
-- Free plan limited to 3 notes
-- Pro plan has unlimited notes
-- Upgrade functionality available to admins
-
-## Deployment on Vercel
+## 🚀 Quick Start
 
 ### Prerequisites
-1. Vercel account
-2. Git repository with this code
+- Node.js 18+ 
+- npm or yarn
 
-### Environment Variables
-Set the following environment variable in Vercel:
+### Installation
 
+1. **Clone the repository**
+```bash
+git clone https://github.com/Djclash557/Multi-tenant.git
+cd Multi-tenant
 ```
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-```
 
-### Deployment Steps
-1. Connect your GitHub repository to Vercel
-2. Set the `JWT_SECRET` environment variable
-3. Deploy the application
-
-The application will automatically:
-- Create the SQLite database in `/tmp/database.sqlite`
-- Seed the database with test tenants and users
-- Enable CORS for API access
-
-### CORS Configuration
-CORS is enabled for all API endpoints to allow automated testing and dashboard access.
-
-## Local Development
-
-1. Install dependencies:
+2. **Install dependencies**
 ```bash
 npm install
 ```
 
-2. Set environment variables:
+3. **Set up environment variables**
 ```bash
 # Create .env.local file
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+cp .env.example .env.local
+
+# Edit .env.local with your configuration
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Optional: Configure SMTP for email notifications
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
 ```
 
-3. Run the development server:
+4. **Run the development server**
 ```bash
 npm run dev
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
+5. **Open your browser**
+Navigate to [http://localhost:3000](http://localhost:3000)
 
-## Testing
+## 🧪 Testing the Application
 
-The application includes test accounts for automated testing:
+### Create Your First Company
+1. Click "Create New Company" on the login page
+2. Fill in your company details
+3. You'll be automatically logged in as admin
 
-- Health endpoint: `GET /health`
-- Authentication with all test accounts
-- Tenant isolation verification
-- Role-based access control
-- Subscription limit enforcement
-- CRUD operations for notes
-- Tenant upgrade functionality
+### Test Features
+- **Create Notes**: Add notes with tags and categories
+- **Search & Filter**: Test the search functionality
+- **Admin Features**: Invite users, manage subscription plans
+- **Mobile View**: Test responsive design on different screen sizes
 
-## Security Considerations
+## 🏗️ Architecture
 
-- JWT tokens expire after 24 hours
-- Passwords are hashed using bcrypt
-- All database queries include tenant filtering
-- CORS is configured for cross-origin requests
-- Input validation on all API endpoints
+### Technology Stack
+- **Frontend**: Next.js 15, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes, Node.js
+- **Database**: SQLite with better-sqlite3
+- **Authentication**: JWT with bcryptjs
+- **Email**: Nodemailer with SMTP support
 
-## Database
+### Database Schema
+```sql
+-- Tenants (Organizations)
+tenants: id, name, slug, subscription_plan, theme_color
 
-The application uses SQLite for simplicity and easy deployment. In production, consider using:
-- PostgreSQL with proper connection pooling
-- Database migrations for schema changes
-- Backup and recovery strategies
-- Connection encryption
+-- Users
+users: id, email, password, first_name, last_name, role, tenant_id
 
-## Frontend
+-- Notes
+notes: id, title, content, tenant_id, created_by, tags, category, is_archived
+```
 
-The frontend is built with:
-- Next.js 15 with App Router
-- TypeScript for type safety
-- Tailwind CSS for styling
-- React Context for state management
-- Responsive design for mobile and desktop
+### API Endpoints
+- **Authentication**: `/api/auth/*` (login, register, verify)
+- **Notes**: `/api/notes/*` (CRUD operations, search, filter)
+- **Tenants**: `/api/tenants/*` (create, upgrade, invite)
+
+## 🔧 Configuration
+
+### Environment Variables
+```env
+# Required
+JWT_SECRET=your-super-secret-jwt-key
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Optional - Email Configuration
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+```
+
+### Database
+The SQLite database is created automatically on first run. No additional setup required.
+
+## 📱 Screenshots
+
+### Login Page
+- Modern glassmorphism design
+- Password visibility toggle
+- Integrated company creation
+
+### Dashboard
+- Notes management interface
+- Search and filtering
+- Real-time clock display
+- Admin controls
+
+### Mobile Responsive
+- Optimized for all screen sizes
+- Touch-friendly interface
+- Smooth animations
+
+## 🚀 Deployment
+
+### Vercel (Recommended)
+1. Connect your GitHub repository to Vercel
+2. Set environment variables in Vercel dashboard
+3. Deploy automatically on every push
+
+### Other Platforms
+- **Netlify**: Static export with API functions
+- **Railway**: Full-stack deployment
+- **DigitalOcean**: VPS deployment
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🎯 Features Roadmap
+
+- [ ] Real-time collaboration
+- [ ] File attachments
+- [ ] Advanced search with Elasticsearch
+- [ ] Mobile app (React Native)
+- [ ] Analytics dashboard
+- [ ] API rate limiting
+- [ ] Webhook support
+
+## 🐛 Troubleshooting
+
+### Common Issues
+- **Port 3000 in use**: App will automatically use port 3001 or 3002
+- **Database errors**: Delete `database.sqlite` and restart
+- **Email not working**: Configure SMTP settings in `.env.local`
+
+### Getting Help
+- Check the [Issues](https://github.com/Djclash557/Multi-tenant/issues) page
+- Create a new issue with detailed description
+- Include error logs and steps to reproduce
+
+## 🙏 Acknowledgments
+
+- **Next.js Team** for the amazing framework
+- **Tailwind CSS** for the utility-first CSS framework
+- **Heroicons** for the beautiful icons
+- **SQLite** for the lightweight database
+
+## 📞 Contact
+
+**Dhruv Joshi** - [@Djclash557](https://github.com/Djclash557)
+
+Project Link: [https://github.com/Djclash557/Multi-tenant](https://github.com/Djclash557/Multi-tenant)
+
+---
+
+⭐ **Star this repository if you found it helpful!**
