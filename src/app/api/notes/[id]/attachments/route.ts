@@ -145,6 +145,6 @@ export async function GET(
     });
 }
 
-export async function OPTIONS(request: NextRequest) {
+export function OPTIONS(request: NextRequest) {
     return handleCORSForOptions(request);
 }

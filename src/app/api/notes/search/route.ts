@@ -94,6 +94,6 @@ export async function GET(request: NextRequest) {
     });
 }
 
-export async function OPTIONS(request: NextRequest) {
+export function OPTIONS(request: NextRequest) {
     return handleCORSForOptions(request);
 }

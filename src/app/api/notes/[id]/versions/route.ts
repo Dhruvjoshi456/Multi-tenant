@@ -127,6 +127,6 @@ export async function POST(
     });
 }
 
-export async function OPTIONS(request: NextRequest) {
+export function OPTIONS(request: NextRequest) {
     return handleCORSForOptions(request);
 }
