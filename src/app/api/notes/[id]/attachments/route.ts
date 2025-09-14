@@ -146,5 +146,5 @@ export async function GET(
 }
 
 export async function OPTIONS(request: NextRequest) {
-    return handleCORS(request) || new NextResponse(null, { status: 200 });
+    return handleCORSForOptions(request);
 }

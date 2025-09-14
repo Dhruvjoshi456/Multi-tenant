@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateUser, generateToken } from '@/lib/auth';
-import { enableCORS, handleCORS } from '@/lib/middleware';
+import { enableCORS, handleCORSForOptions } from '@/lib/middleware';
 import { checkRateLimit, recordLoginAttempt, getClientIP } from '@/lib/rateLimiter';
 
 export async function POST(request: NextRequest) {
@@ -88,5 +88,5 @@ export async function POST(request: NextRequest) {
 }
 
 export async function OPTIONS(request: NextRequest) {
-    return handleCORS(request) || new NextResponse(null, { status: 200 });
+    return handleCORSForOptions(request);
 }

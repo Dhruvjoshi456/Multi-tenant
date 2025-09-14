@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/database';
 import jwt from 'jsonwebtoken';
-import { enableCORS, handleCORS } from '@/lib/middleware';
+import { enableCORS, handleCORSForOptions } from '@/lib/middleware';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
@@ -96,5 +96,5 @@ export async function GET(request: NextRequest) {
 }
 
 export async function OPTIONS(request: NextRequest) {
-    return handleCORS(request) || new NextResponse(null, { status: 200 });
+    return handleCORSForOptions(request);
 }

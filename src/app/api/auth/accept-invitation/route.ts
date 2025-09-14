@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/database';
 import { sendWelcomeEmail } from '@/lib/email';
-import { enableCORS, handleCORS } from '@/lib/middleware';
+import { enableCORS, handleCORSForOptions } from '@/lib/middleware';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -166,5 +166,5 @@ export async function POST(request: NextRequest) {
 }
 
 export async function OPTIONS(request: NextRequest) {
-    return handleCORS(request) || new NextResponse(null, { status: 200 });
+    return handleCORSForOptions(request);
 }

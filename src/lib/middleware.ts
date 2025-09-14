@@ -70,3 +70,7 @@ export async function handleCORS(request: NextRequest): Promise<NextResponse | n
     return null;
 }
 
+export function handleCORSForOptions(request: NextRequest): NextResponse {
+    return enableCORS(new NextResponse(null, { status: 200 }));
+}
+
