@@ -4,9 +4,9 @@ import { Pool } from 'pg';
 let db: Database.Database | null = null;
 let pgPool: Pool | null = null;
 
-// Check if we're in production (Vercel)
+// Environment flags
 const isProduction = process.env.NODE_ENV === 'production';
-const isVercel = process.env.VERCEL === '1';
+const hasPostgresUrl = Boolean(process.env.DATABASE_URL);
 
 // Create a wrapper that makes PostgreSQL Pool look like SQLite Database
 export class PostgresWrapper {
@@ -49,12 +49,9 @@ export class PostgresWrapper {
 }
 
 export function getDatabase() {
-  // Use PostgreSQL in production/Vercel, SQLite in development
-  if (isProduction || isVercel) {
-    return getPostgresDatabase();
-  } else {
-    return getSQLiteDatabase();
-  }
+  // Prefer PostgreSQL only when DATABASE_URL is configured; otherwise use SQLite
+  if (hasPostgresUrl) return getPostgresDatabase();
+  return getSQLiteDatabase();
 }
 
 function getSQLiteDatabase() {

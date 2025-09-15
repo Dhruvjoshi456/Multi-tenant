@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build && npm run migrate:postgres",
+  "buildCommand": "npm run build",
   "env": {
     "NODE_ENV": "production"
   }
