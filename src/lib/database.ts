@@ -56,7 +56,9 @@ export function getDatabase() {
 
 function getSQLiteDatabase() {
   if (!db) {
-    db = new Database('database.sqlite');
+    // Use writable path on serverless platforms (e.g., Vercel)
+    const dbPath = isProduction && !hasPostgresUrl ? '/tmp/database.sqlite' : 'database.sqlite';
+    db = new Database(dbPath);
     // Ensure required tables/columns exist for SQLite
     migrateSqliteSchema(db);
   }
