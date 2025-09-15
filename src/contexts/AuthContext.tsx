@@ -76,32 +76,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const refreshUser = async () => {
         const storedToken = localStorage.getItem('token');
-        const storedUser = localStorage.getItem('user');
-
-        if (storedToken && storedUser) {
-            try {
-                // Re-authenticate to get fresh user data
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        email: JSON.parse(storedUser).email,
-                        password: 'password' // This is a hack for demo - in real app you'd need to store this securely
-                    }),
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    setToken(data.token);
-                    setUser(data.user);
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                }
-            } catch (error) {
-                console.error('Failed to refresh user data:', error);
+        if (!storedToken) return;
+        try {
+            const response = await fetch('/api/auth/me', {
+                headers: {
+                    'Authorization': `Bearer ${storedToken}`,
+                },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setUser(data.user);
+                setToken(storedToken);
+                localStorage.setItem('user', JSON.stringify(data.user));
+            } else if (response.status === 401) {
+                // Token invalid/expired
+                logout();
             }
+        } catch (error) {
+            console.error('Failed to refresh user data:', error);
         }
     };
 
