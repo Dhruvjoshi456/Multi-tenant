@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/database';
+import { migratePostgres } from '@/lib/migrate-postgres';
 import { enableCORS, handleCORS, handleCORSForOptions } from '@/lib/middleware';
 
 export async function POST(request: NextRequest) {
@@ -8,8 +9,13 @@ export async function POST(request: NextRequest) {
     if (corsResponse) return corsResponse;
 
     try {
-        // Initialize database
+        // Initialize database (creates SQLite or connects to Postgres)
         const db = getDatabase();
+
+        // If using Postgres, run migrations once
+        if (process.env.DATABASE_URL) {
+            await migratePostgres();
+        }
 
         const response = NextResponse.json({
             message: 'Database initialized successfully',
