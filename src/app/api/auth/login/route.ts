@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+export const runtime = 'nodejs';
 import { authenticateUser, generateToken } from '@/lib/auth';
 import { enableCORS, handleCORS, handleCORSForOptions } from '@/lib/middleware';
 import { checkRateLimit, recordLoginAttempt, getClientIP } from '@/lib/rateLimiter';

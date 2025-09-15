@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+// Ensure Node.js runtime (better-sqlite3 is not supported on the Edge runtime)
+export const runtime = 'nodejs';
 import { getDatabase } from '@/lib/database';
 import { enableCORS, handleCORS, handleCORSForOptions } from '@/lib/middleware';
 import bcrypt from 'bcryptjs';
