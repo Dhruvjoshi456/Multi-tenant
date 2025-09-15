@@ -38,9 +38,16 @@ export async function POST(request: NextRequest) {
 
         const db = getDatabase();
 
+        // Normalize the tenant slug in case a company name was provided instead of the slug
+        const normalizedSlug = String(tenantSlug)
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .substring(0, 50);
+
         // Check if tenant exists
         const tenantStmt = db.prepare('SELECT * FROM tenants WHERE slug = ?');
-        const tenant = tenantStmt.get(tenantSlug) as { id: number; name: string; slug: string } | undefined;
+        const tenant = tenantStmt.get(normalizedSlug) as { id: number; name: string; slug: string } | undefined;
 
         if (!tenant) {
             return NextResponse.json(
