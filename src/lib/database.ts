@@ -132,4 +132,86 @@ function migrateSqliteSchema(sqliteDb: Database.Database) {
   if (!tenantColumnNames.has('updated_at')) {
     sqliteDb.exec("ALTER TABLE tenants ADD COLUMN updated_at TEXT");
   }
+
+  // Notes table (stores JSON-ish fields as TEXT)
+  sqliteDb.exec(`
+    CREATE TABLE IF NOT EXISTS notes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      content TEXT,
+      tenant_id INTEGER NOT NULL,
+      created_by INTEGER NOT NULL,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      is_archived INTEGER DEFAULT 0,
+      tags TEXT,
+      category TEXT,
+      is_shared INTEGER DEFAULT 0,
+      shared_with TEXT,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (created_by) REFERENCES users(id)
+    );
+  `);
+
+  // Note versions
+  sqliteDb.exec(`
+    CREATE TABLE IF NOT EXISTS note_versions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      note_id INTEGER NOT NULL,
+      title TEXT,
+      content TEXT,
+      version_number INTEGER NOT NULL,
+      created_by INTEGER,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (note_id) REFERENCES notes(id),
+      FOREIGN KEY (created_by) REFERENCES users(id)
+    );
+  `);
+
+  // Note attachments
+  sqliteDb.exec(`
+    CREATE TABLE IF NOT EXISTS note_attachments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      note_id INTEGER NOT NULL,
+      filename TEXT NOT NULL,
+      original_name TEXT,
+      file_type TEXT,
+      file_size INTEGER,
+      file_path TEXT,
+      uploaded_by INTEGER,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (note_id) REFERENCES notes(id),
+      FOREIGN KEY (uploaded_by) REFERENCES users(id)
+    );
+  `);
+
+  // User invitations
+  sqliteDb.exec(`
+    CREATE TABLE IF NOT EXISTS user_invitations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT NOT NULL,
+      first_name TEXT,
+      last_name TEXT,
+      role TEXT DEFAULT 'member',
+      tenant_id INTEGER NOT NULL,
+      token TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      created_by INTEGER,
+      created_at TEXT DEFAULT (datetime('now')),
+      accepted_at TEXT,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (created_by) REFERENCES users(id)
+    );
+  `);
+
+  // Login attempts for rate limiting
+  sqliteDb.exec(`
+    CREATE TABLE IF NOT EXISTS login_attempts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT NOT NULL,
+      ip_address TEXT,
+      success INTEGER NOT NULL,
+      created_at TEXT NOT NULL
+    );
+  `);
 }
