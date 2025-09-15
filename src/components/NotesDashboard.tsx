@@ -325,7 +325,7 @@ export default function NotesDashboard() {
         }
     };
 
-    const createTenant = async (tenantData: { name: string; slug: string; companyName: string }) => {
+    const createTenant = async (tenantData: { companyName: string; adminEmail: string; adminPassword: string; adminFirstName: string; adminLastName: string; themeColor?: string }) => {
         try {
             const response = await fetch('/api/tenants', {
                 method: 'POST',
@@ -341,6 +341,7 @@ export default function NotesDashboard() {
                 localStorage.setItem('token', data.token);
                 await refreshUser();
                 setShowTenantCreation(false);
+                setSuccess('Company created successfully!');
             } else {
                 const errorData = await response.json();
                 setError(errorData.error || 'Failed to create tenant');
@@ -910,9 +911,12 @@ export default function NotesDashboard() {
                             e.preventDefault();
                             const formData = new FormData(e.target as HTMLFormElement);
                             createTenant({
-                                name: (formData.get('companyName') as string) || '',
-                                slug: ((formData.get('companyName') as string) || '').toLowerCase().replace(/\s+/g, '-'),
-                                companyName: (formData.get('companyName') as string) || ''
+                                companyName: (formData.get('companyName') as string) || '',
+                                adminEmail: (formData.get('adminEmail') as string) || '',
+                                adminPassword: (formData.get('adminPassword') as string) || '',
+                                adminFirstName: (formData.get('adminFirstName') as string) || '',
+                                adminLastName: (formData.get('adminLastName') as string) || '',
+                                themeColor: (formData.get('themeColor') as string) || undefined
                             });
                         }}>
                             <div className="space-y-4">
