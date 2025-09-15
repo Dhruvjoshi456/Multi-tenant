@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth, enableCORS, handleCORS, AuthenticatedRequest } from '@/lib/middleware';
+import { withAuth, enableCORS, handleCORS, handleCORSForOptions, AuthenticatedRequest } from '@/lib/middleware';
 import { getDatabase } from '@/lib/database';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
@@ -30,7 +30,7 @@ export async function POST(
                 SELECT * FROM notes 
                 WHERE id = ? AND tenant_id = ?
             `);
-            const note = noteStmt.get(id, authenticatedRequest.user.tenant_id);
+            const note = await noteStmt.get(id, authenticatedRequest.user.tenant_id);
 
             if (!note) {
                 const response = NextResponse.json(
@@ -59,7 +59,7 @@ export async function POST(
                 INSERT INTO note_attachments (note_id, filename, original_name, file_type, file_size, file_path, uploaded_by)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             `);
-            const result = insertAttachmentStmt.run(
+            const result = await insertAttachmentStmt.run(
                 id,
                 filename,
                 file.name,
@@ -111,7 +111,7 @@ export async function GET(
                 SELECT * FROM notes 
                 WHERE id = ? AND tenant_id = ?
             `);
-            const note = noteStmt.get(id, authenticatedRequest.user.tenant_id);
+            const note = await noteStmt.get(id, authenticatedRequest.user.tenant_id);
 
             if (!note) {
                 const response = NextResponse.json(
@@ -129,7 +129,7 @@ export async function GET(
                 WHERE na.note_id = ?
                 ORDER BY na.created_at DESC
             `);
-            const attachments = attachmentsStmt.all(id);
+            const attachments = await attachmentsStmt.all(id);
 
             const response = NextResponse.json({ attachments });
             return enableCORS(response);

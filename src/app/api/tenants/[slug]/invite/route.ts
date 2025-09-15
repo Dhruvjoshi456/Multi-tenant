@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAdmin, enableCORS, handleCORS, AuthenticatedRequest } from '@/lib/middleware';
+import { withAdmin, enableCORS, handleCORS, handleCORSForOptions, AuthenticatedRequest } from '@/lib/middleware';
 import { getDatabase } from '@/lib/database';
 import { sendInvitationEmail } from '@/lib/email';
 import jwt from 'jsonwebtoken';
@@ -50,7 +50,7 @@ export async function POST(
                 SELECT u.* FROM users u 
                 WHERE u.email = ? AND u.tenant_id = ?
             `);
-            const existingUser = existingUserStmt.get(email, authenticatedRequest.user.tenant_id);
+            const existingUser = await existingUserStmt.get(email, authenticatedRequest.user.tenant_id);
 
             if (existingUser) {
                 const response = NextResponse.json(
@@ -65,7 +65,7 @@ export async function POST(
                 SELECT * FROM user_invitations 
                 WHERE email = ? AND tenant_id = ? AND accepted_at IS NULL
             `);
-            const existingInvitation = existingInvitationStmt.get(email, authenticatedRequest.user.tenant_id);
+            const existingInvitation = await existingInvitationStmt.get(email, authenticatedRequest.user.tenant_id);
 
             if (existingInvitation) {
                 const response = NextResponse.json(
@@ -96,7 +96,7 @@ export async function POST(
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
             `);
             const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-            insertInvitationStmt.run(
+            await insertInvitationStmt.run(
                 email,
                 firstName,
                 lastName,
@@ -109,7 +109,7 @@ export async function POST(
 
             // Get tenant name for email
             const tenantStmt = db.prepare('SELECT name FROM tenants WHERE id = ?');
-            const tenant = tenantStmt.get(authenticatedRequest.user.tenant_id);
+            const tenant = await tenantStmt.get(authenticatedRequest.user.tenant_id) as { name: string } | null;
 
             // Create invitation link
             const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
@@ -122,7 +122,7 @@ export async function POST(
                 lastName,
                 companyName: tenant?.name || 'Your Organization',
                 invitationLink,
-                invitedBy: `${authenticatedRequest.user.first_name} ${authenticatedRequest.user.last_name}`
+                invitedBy: `${authenticatedRequest.user.firstName} ${authenticatedRequest.user.last_name}`
             });
 
             const response = NextResponse.json({
@@ -180,7 +180,7 @@ export async function GET(
                 WHERE ui.tenant_id = ? AND ui.accepted_at IS NULL
                 ORDER BY ui.created_at DESC
             `);
-            const invitations = invitationsStmt.all(authenticatedRequest.user.tenant_id);
+            const invitations = await invitationsStmt.all(authenticatedRequest.user.tenant_id);
 
             const response = NextResponse.json({ invitations });
             return enableCORS(response);

@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
         // Check if tenant slug already exists
         const existingTenantStmt = db.prepare('SELECT * FROM tenants WHERE slug = ?');
-        const existingTenant = existingTenantStmt.get(tenantSlug);
+        const existingTenant = await existingTenantStmt.get(tenantSlug);
 
         if (existingTenant) {
             return NextResponse.json(
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
 
         // Check if admin email already exists
         const existingUserStmt = db.prepare('SELECT * FROM users WHERE email = ?');
-        const existingUser = existingUserStmt.get(adminEmail);
+        const existingUser = await existingUserStmt.get(adminEmail);
 
         if (existingUser) {
             return NextResponse.json(
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
             INSERT INTO tenants (name, slug, subscription_plan, theme_color, logo, created_at)
             VALUES (?, ?, ?, ?, ?, datetime('now'))
         `);
-        const tenantResult = insertTenantStmt.run(
+        const tenantResult = await insertTenantStmt.run(
             companyName,
             tenantSlug,
             'free',
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `);
         const now = new Date().toISOString();
-        const userResult = insertUserStmt.run(
+        const userResult = await insertUserStmt.run(
             adminEmail,
             hashedPassword,
             adminFirstName,

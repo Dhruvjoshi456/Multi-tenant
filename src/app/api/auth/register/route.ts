@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
         );
         const now = new Date().toISOString();
-        const result = insertUserStmt.run(email, hashedPassword, firstName, lastName, 'member', tenant.id, 0, now, now);
+        const result = await insertUserStmt.run(email, hashedPassword, firstName, lastName, 'member', tenant.id, 0, now, now);
 
         const userId = result.lastInsertRowid as number;
 
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
              VALUES (?, ?, ?, ?, ?)`
         );
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours from now
-        insertTokenStmt.run(userId, verificationToken, 'email_verification', expiresAt, now);
+        await insertTokenStmt.run(userId, verificationToken, 'email_verification', expiresAt, now);
 
         // TODO: Send verification email
         console.log(`Verification email for ${email}: ${verificationToken}`);

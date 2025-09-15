@@ -910,12 +910,9 @@ export default function NotesDashboard() {
                             e.preventDefault();
                             const formData = new FormData(e.target as HTMLFormElement);
                             createTenant({
-                                companyName: formData.get('companyName'),
-                                adminEmail: formData.get('adminEmail'),
-                                adminPassword: formData.get('adminPassword'),
-                                adminFirstName: formData.get('adminFirstName'),
-                                adminLastName: formData.get('adminLastName'),
-                                themeColor: formData.get('themeColor') || '#3B82F6'
+                                name: (formData.get('companyName') as string) || '',
+                                slug: ((formData.get('companyName') as string) || '').toLowerCase().replace(/\s+/g, '-'),
+                                companyName: (formData.get('companyName') as string) || ''
                             });
                         }}>
                             <div className="space-y-4">

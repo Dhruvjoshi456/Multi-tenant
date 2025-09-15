@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 
         // Check if user exists
         const userStmt = db.prepare('SELECT * FROM users WHERE email = ?');
-        const user = userStmt.get(email);
+        const user = userStmt.get(email) as { id: number; email: string } | null;
 
         if (!user) {
             // Don't reveal if user exists or not for security
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
             `INSERT INTO user_tokens (user_id, token, type, expires_at, created_at)
              VALUES (?, ?, ?, datetime('now', '+1 hour'), datetime('now'))`
         );
-        insertStmt.run(user.id, resetToken, 'password_reset');
+        await insertStmt.run(user.id, resetToken, 'password_reset');
 
         // TODO: Send password reset email
         console.log(`Password reset email for ${email}: ${resetToken}`);

@@ -29,9 +29,9 @@ export async function checkRateLimit(
             `SELECT COUNT(*) as count FROM login_attempts 
              WHERE email = ? AND success = FALSE AND created_at > ?`
         );
-        const blockedAttempts = blockedStmt.get(identifier, blockStart.toISOString());
+        const blockedAttempts = await blockedStmt.get(identifier, blockStart.toISOString()) as { count: number } | null;
 
-        if (blockedAttempts.count >= config.maxAttempts) {
+        if (blockedAttempts && blockedAttempts.count >= config.maxAttempts) {
             return {
                 allowed: false,
                 remaining: 0,
@@ -44,9 +44,9 @@ export async function checkRateLimit(
             `SELECT COUNT(*) as count FROM login_attempts 
              WHERE email = ? AND created_at > ?`
         );
-        const recentAttempts = recentStmt.get(identifier, windowStart.toISOString());
+        const recentAttempts = await recentStmt.get(identifier, windowStart.toISOString()) as { count: number } | null;
 
-        const remaining = Math.max(0, config.maxAttempts - recentAttempts.count);
+        const remaining = Math.max(0, config.maxAttempts - (recentAttempts?.count || 0));
         const allowed = remaining > 0;
 
         return {
@@ -78,7 +78,7 @@ export async function recordLoginAttempt(
             `INSERT INTO login_attempts (email, ip_address, success, created_at)
              VALUES (?, ?, ?, datetime('now'))`
         );
-        stmt.run(identifier, ipAddress, success ? 1 : 0);
+        await stmt.run(identifier, ipAddress, success ? 1 : 0);
     } catch (error) {
         console.error('Failed to record login attempt:', error);
     }

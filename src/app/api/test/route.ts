@@ -15,9 +15,9 @@ export async function GET(request: NextRequest) {
         const usersStmt = db.prepare('SELECT * FROM users');
         const notesStmt = db.prepare('SELECT * FROM notes');
 
-        const tenants = tenantsStmt.all();
-        const users = usersStmt.all();
-        const notes = notesStmt.all();
+        const tenants = await tenantsStmt.all();
+        const users = await usersStmt.all();
+        const notes = await notesStmt.all();
 
         const response = NextResponse.json({
             status: 'ok',
@@ -35,8 +35,9 @@ export async function GET(request: NextRequest) {
         return enableCORS(response);
     } catch (error) {
         console.error('Test endpoint error:', error);
+        const errorMessage = (error instanceof Error) ? error.message : String(error);
         const response = NextResponse.json(
-            { error: 'Database test failed', details: error.message },
+            { error: 'Database test failed', details: errorMessage },
             { status: 500 }
         );
         return enableCORS(response);

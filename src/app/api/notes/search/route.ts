@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth, enableCORS, handleCORS, AuthenticatedRequest } from '@/lib/middleware';
+import { withAuth, enableCORS, handleCORS, handleCORSForOptions, AuthenticatedRequest } from '@/lib/middleware';
 import { getDatabase } from '@/lib/database';
 
 export async function GET(request: NextRequest) {
@@ -66,7 +66,14 @@ export async function GET(request: NextRequest) {
             // Add title and content priority search
             params.push(`%${query}%`, `%${query}%`);
 
-            const results = searchStmt.all(...params);
+            const results = await searchStmt.all(...params) as {
+                id: number;
+                title: string;
+                content: string;
+                tags: string;
+                shared_with: string;
+                created_by_email: string;
+            }[];
 
             // Parse JSON fields
             const processedResults = results.map(note => ({

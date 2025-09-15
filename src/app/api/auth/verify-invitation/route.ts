@@ -47,7 +47,14 @@ export async function GET(request: NextRequest) {
             JOIN tenants t ON ui.tenant_id = t.id
             WHERE ui.token = ? AND ui.accepted_at IS NULL AND ui.expires_at > datetime('now')
         `);
-        const invitation = invitationStmt.get(token);
+        const invitation = await invitationStmt.get(token) as {
+            email: string;
+            first_name: string;
+            last_name: string;
+            role: string;
+            company_name: string;
+            expires_at: string;
+        } | null;
 
         if (!invitation) {
             const response = NextResponse.json(
@@ -62,7 +69,7 @@ export async function GET(request: NextRequest) {
             SELECT * FROM users 
             WHERE email = ? AND tenant_id = ?
         `);
-        const existingUser = existingUserStmt.get(decoded.email, decoded.tenantId);
+        const existingUser = await existingUserStmt.get(decoded.email, decoded.tenantId);
 
         if (existingUser) {
             const response = NextResponse.json(

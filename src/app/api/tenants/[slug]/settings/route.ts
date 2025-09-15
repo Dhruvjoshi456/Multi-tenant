@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAdmin, enableCORS, handleCORS, AuthenticatedRequest } from '@/lib/middleware';
+import { withAdmin, enableCORS, handleCORS, handleCORSForOptions, AuthenticatedRequest } from '@/lib/middleware';
 import { getDatabase } from '@/lib/database';
 
 export async function GET(

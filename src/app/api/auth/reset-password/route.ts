@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
             `SELECT * FROM user_tokens 
              WHERE token = ? AND type = 'password_reset' AND expires_at > datetime('now')`
         );
-        const tokenRecord = tokenStmt.get(token);
+        const tokenRecord = await tokenStmt.get(token) as { id: number; user_id: number; token: string; type: string; expires_at: string; created_at: string } | null;
 
         if (!tokenRecord) {
             return NextResponse.json(
@@ -66,19 +66,19 @@ export async function POST(request: NextRequest) {
         const updateStmt = db.prepare(
             'UPDATE users SET password = ?, updated_at = datetime("now") WHERE id = ?'
         );
-        updateStmt.run(hashedPassword, decoded.userId);
+        await updateStmt.run(hashedPassword, decoded.userId);
 
         // Delete the used token
         const deleteTokenStmt = db.prepare(
             'DELETE FROM user_tokens WHERE id = ?'
         );
-        deleteTokenStmt.run(tokenRecord.id);
+        await deleteTokenStmt.run(tokenRecord.id);
 
         // Invalidate all refresh tokens for this user
         const deleteRefreshStmt = db.prepare(
             'DELETE FROM user_tokens WHERE user_id = ? AND type = "refresh_token"'
         );
-        deleteRefreshStmt.run(decoded.userId);
+        await deleteRefreshStmt.run(decoded.userId);
 
         const response = NextResponse.json({
             message: 'Password reset successfully'

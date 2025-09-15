@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth, enableCORS, handleCORS, AuthenticatedRequest } from '@/lib/middleware';
+import { withAuth, enableCORS, handleCORS, handleCORSForOptions, AuthenticatedRequest } from '@/lib/middleware';
 import { getDatabase } from '@/lib/database';
 
 export async function POST(

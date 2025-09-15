@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth, enableCORS, handleCORS, AuthenticatedRequest } from '@/lib/middleware';
+import { withAuth, enableCORS, handleCORS, handleCORSForOptions, AuthenticatedRequest } from '@/lib/middleware';
 import { getDatabase } from '@/lib/database';
 
 export async function GET(
@@ -17,7 +17,7 @@ export async function GET(
                 SELECT * FROM notes 
                 WHERE id = ? AND tenant_id = ?
             `);
-            const note = noteStmt.get(id, authenticatedRequest.user.tenant_id);
+            const note = await noteStmt.get(id, authenticatedRequest.user.tenant_id);
 
             if (!note) {
                 const response = NextResponse.json(
@@ -35,7 +35,7 @@ export async function GET(
                 WHERE nv.note_id = ?
                 ORDER BY nv.version_number DESC
             `);
-            const versions = versionsStmt.all(id);
+            const versions = await versionsStmt.all(id);
 
             const response = NextResponse.json({ versions });
             return enableCORS(response);
@@ -75,7 +75,7 @@ export async function POST(
                 SELECT * FROM notes 
                 WHERE id = ? AND tenant_id = ?
             `);
-            const note = noteStmt.get(id, authenticatedRequest.user.tenant_id);
+            const note = await noteStmt.get(id, authenticatedRequest.user.tenant_id);
 
             if (!note) {
                 const response = NextResponse.json(
@@ -91,15 +91,15 @@ export async function POST(
                 FROM note_versions 
                 WHERE note_id = ?
             `);
-            const maxVersion = maxVersionStmt.get(id);
-            const nextVersion = (maxVersion.max_version || 0) + 1;
+            const maxVersion = await maxVersionStmt.get(id) as { max_version: number | null } | null;
+            const nextVersion = (maxVersion?.max_version || 0) + 1;
 
             // Create version
             const insertVersionStmt = db.prepare(`
                 INSERT INTO note_versions (note_id, title, content, version_number, created_by)
                 VALUES (?, ?, ?, ?, ?)
             `);
-            insertVersionStmt.run(id, title, content, nextVersion, authenticatedRequest.user.id);
+            await insertVersionStmt.run(id, title, content, nextVersion, authenticatedRequest.user.id);
 
             // Update note
             const updateNoteStmt = db.prepare(`
@@ -107,7 +107,7 @@ export async function POST(
                 SET title = ?, content = ?, updated_at = datetime('now')
                 WHERE id = ? AND tenant_id = ?
             `);
-            updateNoteStmt.run(title, content, id, authenticatedRequest.user.tenant_id);
+            await updateNoteStmt.run(title, content, id, authenticatedRequest.user.tenant_id);
 
             const response = NextResponse.json({
                 message: 'Note version created successfully',

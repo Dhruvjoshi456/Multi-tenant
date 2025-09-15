@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth, enableCORS, handleCORS, AuthenticatedRequest } from '@/lib/middleware';
+import { withAuth, enableCORS, handleCORS, handleCORSForOptions, AuthenticatedRequest } from '@/lib/middleware';
 import { getDatabase } from '@/lib/database';
 
 export async function GET(request: NextRequest) {
     return withAuth(request, async (authenticatedRequest: AuthenticatedRequest) => {
         try {
             const db = getDatabase();
-            const { search, category, tags, archived } = request.nextUrl.searchParams;
+            const search = request.nextUrl.searchParams.get('search');
+            const category = request.nextUrl.searchParams.get('category');
+            const tags = request.nextUrl.searchParams.get('tags');
+            const archived = request.nextUrl.searchParams.get('archived');
 
             let whereClause = 'WHERE n.tenant_id = ?';
-            const params = [authenticatedRequest.user.tenant_id];
+            const params: (string | number)[] = [authenticatedRequest.user.tenant_id];
 
             // Add search filter
             if (search) {
@@ -26,10 +29,10 @@ export async function GET(request: NextRequest) {
 
             // Add tags filter
             if (tags) {
-                const tagList = tags.split(',').map(tag => tag.trim());
+                const tagList = tags.split(',').map((tag: string) => tag.trim());
                 const tagConditions = tagList.map(() => 'n.tags LIKE ?').join(' AND ');
                 whereClause += ` AND (${tagConditions})`;
-                tagList.forEach(tag => params.push(`%"${tag}"%`));
+                tagList.forEach((tag: string) => params.push(`%"${tag}"%`));
             }
 
             // Add archived filter
@@ -46,7 +49,7 @@ export async function GET(request: NextRequest) {
         ${whereClause}
         ORDER BY n.updated_at DESC
       `);
-            const notes = notesStmt.all(...params);
+            const notes = await notesStmt.all(...params);
 
             // Parse JSON fields
             const processedNotes = notes.map(note => ({
@@ -88,9 +91,9 @@ export async function POST(request: NextRequest) {
                 const noteCountStmt = db.prepare(`
           SELECT COUNT(*) as count FROM notes WHERE tenant_id = ?
         `);
-                const noteCount = noteCountStmt.get(authenticatedRequest.user.tenant_id);
+                const noteCount = await noteCountStmt.get(authenticatedRequest.user.tenant_id) as { count: number } | null;
 
-                if (noteCount.count >= 3) {
+                if (noteCount && noteCount.count >= 3) {
                     const response = NextResponse.json(
                         { error: 'Note limit reached. Upgrade to Pro for unlimited notes.' },
                         { status: 403 }
@@ -103,7 +106,7 @@ export async function POST(request: NextRequest) {
         INSERT INTO notes (title, content, tenant_id, created_by, tags, category, is_shared, shared_with)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `);
-            const result = insertStmt.run(
+            const result = await insertStmt.run(
                 title,
                 content,
                 authenticatedRequest.user.tenant_id,
@@ -120,7 +123,22 @@ export async function POST(request: NextRequest) {
         JOIN users u ON n.created_by = u.id
         WHERE n.id = ?
       `);
-            const newNote = newNoteStmt.get(result.lastInsertRowid);
+            const newNote = await newNoteStmt.get(result.lastInsertRowid) as {
+                id: number;
+                title: string;
+                content: string;
+                tags: string;
+                shared_with: string;
+                created_by_email: string;
+            } | null;
+
+            if (!newNote) {
+                const response = NextResponse.json(
+                    { error: 'Failed to retrieve created note' },
+                    { status: 500 }
+                );
+                return enableCORS(response);
+            }
 
             // Parse JSON fields
             const processedNote = {

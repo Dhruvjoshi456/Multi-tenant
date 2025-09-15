@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDatabaseAdapter } from '@/lib/database';
+import { getDatabase } from '@/lib/database';
 import { sendWelcomeEmail } from '@/lib/email';
 import { enableCORS, handleCORS, handleCORSForOptions } from '@/lib/middleware';
 import bcrypt from 'bcryptjs';
@@ -48,13 +48,14 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const db = getDatabaseAdapter();
+        const db = getDatabase();
 
         // Check if invitation exists and is valid
-        const invitation = await db.get(`
+        const invitationStmt = db.prepare(`
             SELECT * FROM user_invitations 
-            WHERE token = ? AND accepted_at IS NULL AND expires_at > NOW()
-        `, [token]);
+            WHERE token = ? AND accepted_at IS NULL AND expires_at > datetime('now')
+        `);
+        const invitation = await invitationStmt.get(token);
 
         if (!invitation) {
             return NextResponse.json(
@@ -64,7 +65,8 @@ export async function POST(request: NextRequest) {
         }
 
         // Check if user already exists
-        const existingUser = await db.get('SELECT * FROM users WHERE email = ?', [payload.email]);
+        const existingUserStmt = db.prepare('SELECT * FROM users WHERE email = ?');
+        const existingUser = await existingUserStmt.get(payload.email);
 
         if (existingUser) {
             return NextResponse.json(
@@ -77,11 +79,12 @@ export async function POST(request: NextRequest) {
         const hashedPassword = await bcrypt.hash(password, 12);
 
         // Create user
-        const now = new Date().toISOString();
-        const userResult = await db.run(`
+        const insertUserStmt = db.prepare(`
             INSERT INTO users (email, password, first_name, last_name, role, tenant_id, is_verified, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [
+        `);
+        const now = new Date().toISOString();
+        const userResult = await insertUserStmt.run(
             payload.email,
             hashedPassword,
             payload.firstName,
@@ -91,15 +94,16 @@ export async function POST(request: NextRequest) {
             1, // Auto-verified via invitation
             now,
             now
-        ]);
+        );
         const userId = userResult.lastInsertRowid as number;
 
         // Mark invitation as accepted
-        await db.run(`
+        const updateInvitationStmt = db.prepare(`
             UPDATE user_invitations 
-            SET accepted_at = NOW(), accepted_by = ?
+            SET accepted_at = datetime('now'), accepted_by = ?
             WHERE token = ?
-        `, [userId, token]);
+        `);
+        await updateInvitationStmt.run(userId, token);
 
         // Generate JWT token
         const authToken = jwt.sign(
@@ -115,7 +119,8 @@ export async function POST(request: NextRequest) {
         );
 
         // Get tenant info
-        const tenant = await db.get('SELECT * FROM tenants WHERE id = ?', [payload.tenantId]) as { id: number; name: string; slug: string; subscription_plan: string; theme_color?: string; logo?: string } | null;
+        const tenantStmt = db.prepare('SELECT * FROM tenants WHERE id = ?');
+        const tenant = await tenantStmt.get(payload.tenantId) as { id: number; name: string; slug: string; subscription_plan: string; theme_color?: string; logo?: string } | null;
 
         // Send welcome email
         const emailSent = await sendWelcomeEmail({

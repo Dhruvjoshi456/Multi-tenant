@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth, enableCORS, handleCORS, AuthenticatedRequest } from '@/lib/middleware';
+import { withAuth, enableCORS, handleCORS, handleCORSForOptions, AuthenticatedRequest } from '@/lib/middleware';
 import { getDatabase } from '@/lib/database';
 
 export async function POST(
@@ -18,7 +18,13 @@ export async function POST(
                 SELECT * FROM notes 
                 WHERE id = ? AND tenant_id = ?
             `);
-            const note = noteStmt.get(id, authenticatedRequest.user.tenant_id);
+            const note = await noteStmt.get(id, authenticatedRequest.user.tenant_id) as {
+                id: number;
+                title: string;
+                content: string;
+                shared_with: string;
+                tags: string;
+            } | null;
 
             if (!note) {
                 const response = NextResponse.json(
@@ -34,7 +40,7 @@ export async function POST(
                 SET is_shared = ?, shared_with = ?, updated_at = datetime('now')
                 WHERE id = ? AND tenant_id = ?
             `);
-            updateStmt.run(
+            await updateStmt.run(
                 isShared ? 1 : 0,
                 JSON.stringify(userIds || []),
                 id,
@@ -77,7 +83,14 @@ export async function GET(
                 JOIN users u ON n.created_by = u.id
                 WHERE n.id = ? AND n.tenant_id = ?
             `);
-            const note = noteStmt.get(id, authenticatedRequest.user.tenant_id);
+            const note = await noteStmt.get(id, authenticatedRequest.user.tenant_id) as {
+                id: number;
+                title: string;
+                content: string;
+                shared_with: string;
+                tags: string;
+                created_by_email: string;
+            } | null;
 
             if (!note) {
                 const response = NextResponse.json(
@@ -98,7 +111,7 @@ export async function GET(
                     FROM users 
                     WHERE id IN (${placeholders})
                 `);
-                sharedUsers = usersStmt.all(...sharedWith);
+                sharedUsers = await usersStmt.all(...sharedWith);
             }
 
             const response = NextResponse.json({

@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
             `SELECT * FROM user_tokens 
              WHERE token = ? AND type = 'email_verification' AND expires_at > datetime('now')`
         );
-        const tokenRecord = tokenStmt.get(token);
+        const tokenRecord = await tokenStmt.get(token) as { id: number; user_id: number; token: string; type: string; expires_at: string; created_at: string } | null;
 
         if (!tokenRecord) {
             return NextResponse.json(
@@ -54,13 +54,13 @@ export async function POST(request: NextRequest) {
         const updateStmt = db.prepare(
             'UPDATE users SET is_verified = TRUE, updated_at = datetime("now") WHERE id = ?'
         );
-        updateStmt.run(decoded.userId);
+        await updateStmt.run(decoded.userId);
 
         // Delete the used token
         const deleteStmt = db.prepare(
             'DELETE FROM user_tokens WHERE id = ?'
         );
-        deleteStmt.run(tokenRecord.id);
+        await deleteStmt.run(tokenRecord.id);
 
         // Get updated user info
         const userStmt = db.prepare(
@@ -69,7 +69,25 @@ export async function POST(request: NextRequest) {
              JOIN tenants t ON u.tenant_id = t.id
              WHERE u.id = ?`
         );
-        const user = userStmt.get(decoded.userId);
+        const user = await userStmt.get(decoded.userId) as {
+            id: number;
+            email: string;
+            first_name: string;
+            last_name: string;
+            role: string;
+            is_verified: number;
+            tenant_id: number;
+            tenant_name: string;
+            tenant_slug: string;
+            subscription_plan: string;
+        } | null;
+
+        if (!user) {
+            return NextResponse.json(
+                { error: 'User not found' },
+                { status: 404 }
+            );
+        }
 
         const response = NextResponse.json({
             message: 'Email verified successfully',

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAdmin, enableCORS, handleCORS, AuthenticatedRequest } from '@/lib/middleware';
+import { withAdmin, enableCORS, handleCORS, handleCORSForOptions, AuthenticatedRequest } from '@/lib/middleware';
 import { getDatabase } from '@/lib/database';
 
 export async function POST(
@@ -24,7 +24,12 @@ export async function POST(
             const tenantStmt = db.prepare(`
         SELECT * FROM tenants WHERE slug = ? AND id = ?
       `);
-            const tenant = tenantStmt.get(slug, authenticatedRequest.user.tenant_id);
+            const tenant = await tenantStmt.get(slug, authenticatedRequest.user.tenant_id) as {
+                id: number;
+                name: string;
+                slug: string;
+                subscription_plan: string;
+            } | null;
 
             if (!tenant) {
                 const response = NextResponse.json(
@@ -54,7 +59,7 @@ export async function POST(
         SET subscription_plan = 'free'
         WHERE slug = ? AND id = ?
       `);
-            updateStmt.run(slug, authenticatedRequest.user.tenant_id);
+            await updateStmt.run(slug, authenticatedRequest.user.tenant_id);
 
             const response = NextResponse.json({
                 message: 'Tenant downgraded to Free plan successfully',
