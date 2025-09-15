@@ -389,7 +389,7 @@ export default function NotesDashboard() {
         }
     };
 
-    const canCreateNote = user?.tenant.subscription_plan === 'pro' || notes.length < 3;
+    const canCreateNote = (user?.tenant?.subscription_plan === 'pro') || notes.length < 3;
 
     if (loading) {
         return (
@@ -422,11 +422,11 @@ export default function NotesDashboard() {
                                     <p className="text-sm text-gray-500">Notes Workspace</p>
                                 </div>
                             </div>
-                            <span className={`px-3 py-1 text-xs font-semibold rounded-full ${user?.tenant.subscription_plan === 'pro'
+                            <span className={`px-3 py-1 text-xs font-semibold rounded-full ${(user?.tenant?.subscription_plan === 'pro')
                                 ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200'
                                 : 'bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 border border-yellow-200'
                                 }`}>
-                                {user?.tenant.subscription_plan === 'pro' ? '✨ Pro Plan' : '📝 Free Plan'}
+                                {(user?.tenant?.subscription_plan === 'pro') ? '✨ Pro Plan' : '📝 Free Plan'}
                             </span>
                         </div>
                         <div className="flex items-center space-x-4">

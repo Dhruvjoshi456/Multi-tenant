@@ -14,7 +14,19 @@ export async function GET(request: NextRequest) {
             return enableCORS(response);
         }
 
-        const response = NextResponse.json({ user });
+        // Normalize shape to match /api/auth/login response
+        const normalized = {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            tenant: {
+                id: user.tenant_id,
+                slug: user.tenant_slug,
+                name: user.tenant_name,
+                subscription_plan: user.subscription_plan,
+            },
+        };
+        const response = NextResponse.json({ user: normalized });
         return enableCORS(response);
     } catch (error) {
         console.error('Get current user error:', error);
