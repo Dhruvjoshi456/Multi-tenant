@@ -44,6 +44,16 @@ export function verifyToken(token: string): JWTPayload | null {
     }
 }
 
+function parseCookies(cookieHeader: string | null): Record<string, string> {
+    if (!cookieHeader) return {};
+    return Object.fromEntries(
+        cookieHeader.split(';').map(c => {
+            const [k, ...v] = c.split('=');
+            return [k.trim(), decodeURIComponent((v || []).join('=').trim())];
+        })
+    );
+}
+
 export async function authenticateUser(email: string, password: string): Promise<User | null> {
     const db = getDatabase();
 
@@ -53,7 +63,8 @@ export async function authenticateUser(email: string, password: string): Promise
     JOIN tenants t ON u.tenant_id = t.id
     WHERE u.email = ?
   `);
-    const user = await userStmt.get(email) as {
+    // better-sqlite3 is synchronous — DO NOT await .get()
+    const user = userStmt.get(email) as {
         id: number;
         email: string;
         password: string;
@@ -66,14 +77,10 @@ export async function authenticateUser(email: string, password: string): Promise
         subscription_plan: string;
     } | null;
 
-    if (!user) {
-        return null;
-    }
+    if (!user) return null;
 
     const isValidPassword = await verifyPassword(password, user.password);
-    if (!isValidPassword) {
-        return null;
-    }
+    if (!isValidPassword) return null;
 
     return {
         id: user.id,
@@ -97,7 +104,8 @@ export async function getUserById(userId: number): Promise<User | null> {
     JOIN tenants t ON u.tenant_id = t.id
     WHERE u.id = ?
   `);
-    const user = await userStmt.get(userId) as {
+    // better-sqlite3 is synchronous — DO NOT await .get()
+    const user = userStmt.get(userId) as {
         id: number;
         email: string;
         first_name: string;
@@ -109,9 +117,7 @@ export async function getUserById(userId: number): Promise<User | null> {
         subscription_plan: 'free' | 'pro';
     } | null;
 
-    if (!user) {
-        return null;
-    }
+    if (!user) return null;
 
     return {
         id: user.id,
@@ -128,10 +134,13 @@ export async function getUserById(userId: number): Promise<User | null> {
 
 export function extractTokenFromRequest(request: Request): string | null {
     const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        return authHeader.substring(7);
     }
-    return authHeader.substring(7);
+    // fallback: check Cookie header for 'token' (if you set token as cookie on login)
+    const cookieHeader = request.headers.get('cookie');
+    const cookies = parseCookies(cookieHeader);
+    return cookies['token'] || null;
 }
 
 export async function getCurrentUser(request: Request): Promise<User | null> {
