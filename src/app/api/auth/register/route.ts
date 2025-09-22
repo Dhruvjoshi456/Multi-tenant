@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const db = getDatabase();
+        const db = await getDatabase();
 
         // Normalize the tenant slug in case a company name was provided instead of the slug
         const normalizedSlug = String(tenantSlug)
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
 
         // Check if tenant exists
         const tenantStmt = db.prepare('SELECT * FROM tenants WHERE slug = ?');
-        const tenant = tenantStmt.get(normalizedSlug) as { id: number; name: string; slug: string } | undefined;
+        const tenant = await tenantStmt.get([normalizedSlug]) as { id: number; name: string; slug: string } | undefined;
 
         if (!tenant) {
             return NextResponse.json(
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
         // Check if user already exists
         const existingUserStmt = db.prepare('SELECT * FROM users WHERE email = ?');
-        const existingUser = existingUserStmt.get(email);
+        const existingUser = await existingUserStmt.get(email);
 
         if (existingUser) {
             return NextResponse.json(
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
         );
         const now = new Date().toISOString();
-        const result = await insertUserStmt.run(email, hashedPassword, firstName, lastName, 'member', tenant.id, 0, now, now);
+        const result = await insertUserStmt.run([email, hashedPassword, firstName, lastName, 'member', tenant.id, 0, now, now]);
 
         const userId = result.lastInsertRowid as number;
 
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
              VALUES (?, ?, ?, ?, ?)`
         );
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours from now
-        await insertTokenStmt.run(userId, verificationToken, 'email_verification', expiresAt, now);
+        await insertTokenStmt.run([userId, verificationToken, 'email_verification', expiresAt, now]);
 
         // TODO: Send verification email
         console.log(`Verification email for ${email}: ${verificationToken}`);

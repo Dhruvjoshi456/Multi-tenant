@@ -55,7 +55,7 @@ function parseCookies(cookieHeader: string | null): Record<string, string> {
 }
 
 export async function authenticateUser(email: string, password: string): Promise<User | null> {
-    const db = getDatabase();
+    const db = await getDatabase();
 
     const userStmt = db.prepare(`
     SELECT u.*, t.slug as tenant_slug, t.name as tenant_name, t.subscription_plan
@@ -63,8 +63,8 @@ export async function authenticateUser(email: string, password: string): Promise
     JOIN tenants t ON u.tenant_id = t.id
     WHERE u.email = ?
   `);
-    // better-sqlite3 is synchronous — DO NOT await .get()
-    const user = userStmt.get(email) as {
+    // Await the async .get() and pass params as array
+    const user = await userStmt.get([email]) as {
         id: number;
         email: string;
         password: string;
@@ -96,7 +96,7 @@ export async function authenticateUser(email: string, password: string): Promise
 }
 
 export async function getUserById(userId: number): Promise<User | null> {
-    const db = getDatabase();
+    const db = await getDatabase();
 
     const userStmt = db.prepare(`
     SELECT u.*, t.slug as tenant_slug, t.name as tenant_name, t.subscription_plan
@@ -104,8 +104,8 @@ export async function getUserById(userId: number): Promise<User | null> {
     JOIN tenants t ON u.tenant_id = t.id
     WHERE u.id = ?
   `);
-    // better-sqlite3 is synchronous — DO NOT await .get()
-    const user = userStmt.get(userId) as {
+    // Await the async .get() and pass params as array
+    const user = await userStmt.get([userId]) as {
         id: number;
         email: string;
         first_name: string;

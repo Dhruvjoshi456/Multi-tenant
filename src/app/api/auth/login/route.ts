@@ -77,9 +77,17 @@ export async function POST(request: NextRequest) {
             }
         });
 
+        // persist token in HttpOnly cookie (client will stay logged in)
+        response.cookies.set('token', token, {
+            httpOnly: true,
+            path: '/',
+            maxAge: 60 * 60 * 24 * 7 // 7 days
+        });
+
         return enableCORS(response);
     } catch (error) {
-        console.error('Login error:', error);
+        // Log full stack for Vercel logs
+        console.error('Login error:', (error as Error).stack || error);
         const response = NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }
